@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [App\Http\Controllers\PollController::class, 'index'])->name('show-poll');
+
+Route::post('/', [App\Http\Controllers\PollController::class, 'submitPoll'])->name('submit-poll');
+Route::get('/poll-results', [App\Http\Controllers\PollController::class, 'showResults'])->name('poll-results');
+
