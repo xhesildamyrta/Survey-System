@@ -12,8 +12,10 @@ class Response extends Model
     protected $fillable = [
         'ip_address',
         'computer_id',
-        // 'question_id',
-        // 'answer_id',
+        'poll_id',
         'selected_option',
     ];
+    public function poll(){
+        return $this->belongsTo(Poll::class);
+    }
 }

@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Question;
+use App\Models\Poll;
 use App\Models\Answer;
 
-class QuestionSeeder extends Seeder
+class PollSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -34,14 +34,14 @@ class QuestionSeeder extends Seeder
             ],
         ];
         foreach ($questions as $questionData) {
-            $question = Question::create([
+            $question = Poll::create([
                 'title' => $questionData['title'],
             ]);
 
             foreach ($questionData['answers'] as $answerData) {
                 Answer::create([
                     'title' => $answerData['title'],
-                    'question_id' => $question->id,
+                    'poll_id' => $question->id,
                 ]);
             }
         }

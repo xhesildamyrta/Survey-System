@@ -11,9 +11,10 @@ class Answer extends Model
 
     protected $fillable = [
         'title',
+        'poll_id'
       ];
 
     public function question(){
-        return $this->belongsTo(Question::class);
+        return $this->belongsTo(Poll::class);
     }
 }

@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [App\Http\Controllers\PollController::class, 'index'])->name('show-poll');
+Route::get('/poll/{id}',[App\Http\Controllers\PollController::class, 'show'])->name('single-poll');
 
-Route::post('/', [App\Http\Controllers\PollController::class, 'submitPoll'])->name('submit-poll');
+Route::post('/poll', [App\Http\Controllers\PollController::class, 'submitPoll'])->name('submit-poll');
+
+
 Route::get('/poll-results', [App\Http\Controllers\PollController::class, 'showResults'])->name('poll-results');
 
