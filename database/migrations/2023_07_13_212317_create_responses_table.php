@@ -16,8 +16,10 @@ return new class extends Migration
             $table->string('ip_address');
             $table->string('computer_id');
             $table->unsignedBigInteger('poll_id');
-            $table->json('selected_option');
+            $table->unsignedBigInteger('answer_id');
             $table->foreign('poll_id')->references('id')->on('polls')->onDelete('cascade');
+            $table->foreign('answer_id')->references('id')->on('answers')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

@@ -19,5 +19,5 @@ Route::get('/poll/{id}',[App\Http\Controllers\PollController::class, 'show'])->n
 Route::post('/poll', [App\Http\Controllers\PollController::class, 'submitPoll'])->name('submit-poll');
 
 
-Route::get('/poll-results', [App\Http\Controllers\PollController::class, 'showResults'])->name('poll-results');
+Route::get('/poll-results/{id}', [App\Http\Controllers\PollController::class, 'showResults'])->name('poll-results');
 

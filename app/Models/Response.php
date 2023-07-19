@@ -13,7 +13,7 @@ class Response extends Model
         'ip_address',
         'computer_id',
         'poll_id',
-        'selected_option',
+        'answer_id',
     ];
     public function poll(){
         return $this->belongsTo(Poll::class);

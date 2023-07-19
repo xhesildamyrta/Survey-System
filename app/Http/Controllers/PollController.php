@@ -41,7 +41,6 @@ class PollController extends Controller
         $existingVote = Response::where('ip_address', $ip)
             ->where('computer_id', $userAgent)
             ->first();
-            // dd($request);
 
        $validatedData = $request->validate([
         'question' => 'required'
@@ -50,58 +49,31 @@ class PollController extends Controller
         'required' =>'Please chose an answer for the question!'
        ]
        );
-       $answer = Answer::where('id',$validatedData['question']);
-       dd($answer->poll_id);
-    //    dd($validatedData['question'], Poll::where('question_id', 4)->first());
+       $answer = Answer::where('id',$validatedData['question'])->get()->first();
+        // if (!$existingVote) {
 
-        $validatedData = $request->validate(
-            $this->getValidationRules($questionsKeys),
-            [
-                'required' => 'Please select an answer for question.',
-            ]
-        );
-
-        if (!$existingVote) {
-            $questions = Question::all();
-            foreach ($questions as $key => $question) {
-                $selectedOption = $request->input('question' . $key);
-                $answer = Answer::find($selectedOption);
-
-                $responses[] = [
-                    'question_id' => $question->id,
-                    'selected_option' => $selectedOption,
-                    'answer' => $answer ? $answer->title : null,
-                ];
-            }
 
             $response = new Response();
             $response->ip_address = $ip;
             $response->computer_id = $userAgent;
-            $response->poll_id = json_encode($responses);
+            $response->poll_id = $answer['poll_id'];
+            $response->answer_id = $validatedData['question'];
             $response->save();
 
-            Cookie::queue('voted', true, 60);
+            // Cookie::queue('voted', true, 60);
 
             return redirect()
                 ->back()
-                ->with('success', 'Answer submitted successfully!')
-                ->cookie('voted', true, 10080);
-        } else {
-            return redirect()
-                ->back()
-                ->with('error','You(or someone on Your Wi-Fi network) have already participated on this poll!');
-        }
+                ->with('success', 'Answer submitted successfully!');
+                // ->cookie('voted', true, 10080);
+        // } else {
+        //     return redirect()
+        //         ->back()
+        //         ->with('error','You(or someone on Your Wi-Fi network) have already participated on this poll!');
+        // }
     }
-    // private function getValidationRules(array $questionKeys): array
-    // {
-    //     $validationRules = [];
 
-    //     foreach ($questionKeys as $key) {
-    //         $validationRules['question' . $key] = 'required';
-    //     }
 
-    //     return $validationRules;
-    // }
 
     public function getIPAddress()
     {
@@ -117,91 +89,95 @@ class PollController extends Controller
         }
     }
 
-    // public function showResults()
-    // {
-    //     $questions = Question::all();
-    //     $votes = Response::all();
-    //     $votesPerQuestion = [];
+    public function showResults($id)
+    {
+        $votes = [];
+        $poll_responses = Response::where('poll_id',$id)->get();
 
-    //     foreach ($votes as $vote) {
-    //         $answers = json_decode($vote['selected_option'], true);
+        foreach($poll_responses as $poll=>$vote){
+            dd($vote['answer_id']);
 
-    //         foreach ($answers as $answer) {
-    //             $questionId = $answer['question_id'];
-    //             $selectedOption = $answer['selected_option'];
 
-    //             if (!isset($votesPerQuestion[$questionId][$selectedOption])) {
-    //                 $votesPerQuestion[$questionId][$selectedOption] = 0;
-    //             }
+        }
+        $votes_per_answer = [];
+        // Format wanted
+        // $votes = [
+        // 'answer1'=>'3votes',
+        // 'answer2'=>'5votes',
+        // 'answer3'=>'7votes',
+        // ];
 
-    //             $votesPerQuestion[$questionId][$selectedOption]++;
-    //         }
-    //     }
 
-    //     $votesPercentage = [];
-    //     $totalVotes = 0;
 
-    //     foreach ($votesPerQuestion as $questionId => $options) {
-    //         $totalVotes = array_sum($options);
-    //         $votesPercentage[$questionId] = [];
+        // foreach ($votes as $vote) {
+        //     $answers = json_decode($vote['selected_option'], true);
 
-    //         foreach ($options as $option => $count) {
-    //             $percentage = ($count / $totalVotes) * 100;
-    //             $votesPercentage[$questionId][$option] = number_format(
-    //                 $percentage,
-    //                 2
-    //             );
-    //         }
-    //     }
+        //     foreach ($answers as $answer) {
+        //         $questionId = $answer['question_id'];
+        //         $selectedOption = $answer['selected_option'];
 
-    //     $optionVotes = $votesPercentage ?? 0;
-    //     $latest_vote = $this->calculateDateTimeDifference();
-    //     return view(
-    //         'poll-results',
-    //         compact(
-    //             'latest_vote',
-    //             'questions',
-    //             'votes',
-    //             'optionVotes',
-    //             'votesPerQuestion',
-    //             'totalVotes'
-    //         )
-    //     );
-    // }
+        //         if (!isset($votesPerQuestion[$questionId][$selectedOption])) {
+        //             $votesPerQuestion[$questionId][$selectedOption] = 0;
+        //         }
 
-    // public function calculateDateTimeDifference()
-    // {
-    //     $latest_date_voted = Response::latest()->first()->created_at ?? null;
+        //         $votesPerQuestion[$questionId][$selectedOption]++;
+        //     }
+        // }
 
-    //     if (is_null($latest_date_voted)) {
-    //         return;
-    //     }
+        // $votesPercentage = [];
+        // $totalVotes = 0;
 
-    //     $currentDateTime = Carbon::now();
-    //     $specificDateTime = Carbon::parse($latest_date_voted);
+        // foreach ($votesPerQuestion as $questionId => $options) {
+        //     $totalVotes = array_sum($options);
+        //     $votesPercentage[$questionId] = [];
 
-    //     $diffInMinutes = $currentDateTime->diffInMinutes($specificDateTime);
+        //     foreach ($options as $option => $count) {
+        //         $percentage = ($count / $totalVotes) * 100;
+        //         $votesPercentage[$questionId][$option] = number_format(
+        //             $percentage,
+        //             2
+        //         );
+        //     }
+        // }
 
-    //     if ($diffInMinutes < 2) {
-    //         return 'Just now';
-    //     } else {
-    //         $diff = $currentDateTime->diff($specificDateTime);
+        // $optionVotes = $votesPercentage ?? 0;
+        // $latest_vote = $this->calculateDateTimeDifference();
+        return view('single-poll-results',['poll'=>$poll]);
+    }
 
-    //         $days = $diff->d;
-    //         $hours = $diff->h;
-    //         $minutes = $diff->i;
+    public function calculateDateTimeDifference()
+    {
+        $latest_date_voted = Response::latest()->first()->created_at ?? null;
 
-    //         $result = '';
+        if (is_null($latest_date_voted)) {
+            return;
+        }
 
-    //         if ($days > 0) {
-    //             $result .= $days . ' day' . ($days > 1 ? 's ' : ' ');
-    //         }
-    //         if ($hours > 0) {
-    //             $result .= $hours . ' hour' . ($hours > 1 ? 's ' : ' ');
-    //         }
-    //         $result .= $minutes . ' minute' . ($minutes > 1 ? 's ago' : '');
+        $currentDateTime = Carbon::now();
+        $specificDateTime = Carbon::parse($latest_date_voted);
 
-    //         return $result;
-    //     }
-    // }
+        $diffInMinutes = $currentDateTime->diffInMinutes($specificDateTime);
+
+        if ($diffInMinutes < 2) {
+            return 'Just now';
+        } else {
+            $diff = $currentDateTime->diff($specificDateTime);
+
+            $days = $diff->d;
+            $hours = $diff->h;
+            $minutes = $diff->i;
+
+            $result = '';
+
+            if ($days > 0) {
+                $result .= $days . ' day' . ($days > 1 ? 's ' : ' ');
+            }
+            if ($hours > 0) {
+                $result .= $hours . ' hour' . ($hours > 1 ? 's ' : ' ');
+            }
+            $result .= $minutes . ' minute' . ($minutes > 1 ? 's ago' : '');
+
+            return $result;
+        }
+    }
 }
