@@ -10,7 +10,7 @@
         </x-core.session-info>
     @endif
     @if (!$poll->isEmpty())
-            <x-poll-form :polls="$poll" />
+        <x-poll.chose-poll-form :polls="$poll" />
         </div>
     @endif
 </x-layouts.app>

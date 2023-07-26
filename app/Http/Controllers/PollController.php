@@ -18,12 +18,12 @@ class PollController extends Controller
         //count options selected foreach question;
         $votes = null;
 
-        return view('welcome', compact('poll', 'votes'));
+        return view('pages.welcome', compact('poll', 'votes'));
     }
 
     public function show($id){
         $poll = Poll::find($id);
-        return view('single-poll',['poll' => $poll]);
+        return view('pages.single-poll',['poll' => $poll]);
 
     }
 
@@ -93,56 +93,41 @@ class PollController extends Controller
     {
         $votes = [];
         $poll_responses = Response::where('poll_id',$id)->get();
+        $total = $poll_responses->count();
+        $poll = Poll::where('id', $id)->get()->first();
+        // dd($poll);
 
-        foreach($poll_responses as $poll=>$vote){
-            dd($vote['answer_id']);
 
-
-        }
+        $results = collect($poll_responses)->map(function($result) use($poll){
+            if ($result) {
+                return [
+                    'result' => [
+                        'id' => $result->id,
+                        'poll_id'=> $result->poll_id,
+                        'answer_id' =>$result->answer_id,
+                        'title' => $poll->title,
+                        'answer' => Answer::where('id',$result->answer_id)->get()->first()->title,
+                    ],
+                    'answer_id' =>$result->answer_id,
+                ];
+            }
+        })->groupBy('answer_id')
+        ->map(function ($step) {
+            return collect($step)->map(function ($item) {
+                return $item['result'];
+            });
+        })
+        ->toArray();
+        // dd($results);
         $votes_per_answer = [];
-        // Format wanted
-        // $votes = [
-        // 'answer1'=>'3votes',
-        // 'answer2'=>'5votes',
-        // 'answer3'=>'7votes',
-        // ];
 
+        return view('pages.single-poll-results',['results'=>$results,'totalVotes'=>$total ]);
+    }
 
+    public static function convertToPercent($votes,$total){
 
-        // foreach ($votes as $vote) {
-        //     $answers = json_decode($vote['selected_option'], true);
+        return number_format((float)(($votes/$total)*100), 2, '.', '');
 
-        //     foreach ($answers as $answer) {
-        //         $questionId = $answer['question_id'];
-        //         $selectedOption = $answer['selected_option'];
-
-        //         if (!isset($votesPerQuestion[$questionId][$selectedOption])) {
-        //             $votesPerQuestion[$questionId][$selectedOption] = 0;
-        //         }
-
-        //         $votesPerQuestion[$questionId][$selectedOption]++;
-        //     }
-        // }
-
-        // $votesPercentage = [];
-        // $totalVotes = 0;
-
-        // foreach ($votesPerQuestion as $questionId => $options) {
-        //     $totalVotes = array_sum($options);
-        //     $votesPercentage[$questionId] = [];
-
-        //     foreach ($options as $option => $count) {
-        //         $percentage = ($count / $totalVotes) * 100;
-        //         $votesPercentage[$questionId][$option] = number_format(
-        //             $percentage,
-        //             2
-        //         );
-        //     }
-        // }
-
-        // $optionVotes = $votesPercentage ?? 0;
-        // $latest_vote = $this->calculateDateTimeDifference();
-        return view('single-poll-results',['poll'=>$poll]);
     }
 
     public function calculateDateTimeDifference()

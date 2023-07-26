@@ -15,7 +15,7 @@
     @vite('resources/css/app.css')
 </head>
 
-<body class="antialiased max-w-screen-md mx-auto px-4 my-10">
+<body class="antialiased max-w-screen-xl mx-auto px-4 my-10">
     {{ $slot }}
 </body>
 
