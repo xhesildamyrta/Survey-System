@@ -25,8 +25,8 @@
                     <x-core.button as="a" href="{{route('polls-list')}}" class="flex items-start" primary class="w-full h-32">
                         {{ __('See all polls list') }}
                     </x-core.button>
-                    <x-core.button class="flex items-start" primary class="w-full h-32">
-                        {{ __('Create a new personality test') }}
+                    <x-core.button as="a" href="{{route('personality-test')}}" class="flex items-start" primary class="w-full h-32">
+                        {{ __('Create a personality test') }}
                     </x-core.button>
                 </div>
                 <div class=""></div>

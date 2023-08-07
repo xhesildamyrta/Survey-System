@@ -19,6 +19,8 @@ Route::get('/', [App\Http\Controllers\PollController::class, 'index'])->name('sh
 Route::get('/poll/{id}', [App\Http\Controllers\PollController::class, 'show'])->name('single-poll');
 Route::post('/poll', [App\Http\Controllers\PollController::class, 'submitPoll'])->name('submit-poll');
 Route::get('/poll-results/{id}', [App\Http\Controllers\PollController::class, 'showResults'])->name('poll-results');
+Route::get('/test/personality', [App\Http\Controllers\PersonalityTestController::class, 'index'])->name('personality-test');
+
 
 
 

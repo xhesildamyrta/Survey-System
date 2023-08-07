@@ -11,12 +11,21 @@
             <li>{{ $error }}</li>
         @endforeach
             @csrf
-            <div class="">
-                <div class="tw-text-teal-700 font-bold">Enter the desired question for the poll you want to create</div>
-                <div class="mt-6">
+            <div class="flex items-center gap-x-4">
+                <div class="tw-text-teal-700 font-bold">Poll Name</div>
+                <div>
                     <x-input-label for="poll_title" value="{{ __('poll_title') }}" class="sr-only" />
 
-                    <x-text-input id="poll_title'" name="poll_title" type="text" class="mt-1 block w-full"
+                    <x-text-input id="poll_title'" name="poll_title" type="text" class="mt-1 block "
+                        placeholder="{{ __('Poll Title') }}" />
+                </div>
+            </div>
+            <div class="mt-10">
+                <div class="tw-text-teal-700 font-bold">Enter the desired question for the poll you want to create</div>
+                <div class="mt-6">
+                    <x-input-label for="question_title" value="{{ __('question_title') }}" class="sr-only" />
+
+                    <x-text-input id="question_title'" name="question_title" type="text" class="mt-1 block w-full"
                         placeholder="{{ __('Question') }}" />
                 </div>
             </div>

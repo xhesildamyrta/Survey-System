@@ -10,7 +10,7 @@
                         {{ __('Creation date') }}
                     </th>
                     <th scope="col" class="px-6 py-3">
-                        Action
+                        {{__('Action')}}
                     </th>
                 </tr>
             </thead>
@@ -25,11 +25,14 @@
                             {{ $poll->created_at }}
                         </td>
                         <td colspan="2" class="px-6 py-4 ">
-                            <button
-                                x-on:click.prevent="$dispatch('open-modal', 'poll-modal.{{ $loop->iteration }}')">See</button>
-                            <button>Export</button>
+                            <div class="flex divide-x divide-teal-500 space-x-3">
+                            <button x-on:click.prevent="$dispatch('open-modal', 'poll-modal.{{ $loop->iteration }}')">See</button>
+                            <button class="pl-3">Export Poll Datas</button>
+                            <button  x-on:click.prevent="$dispatch('open-modal', 'share-modal.{{ $loop->iteration }}')" class="pl-3">Share</button>
+                            </div>
                         </td>
                     </tr>
+                    <x-admin.share-modal :poll="$poll" :loop="$loop"/>
                     <x-admin.poll-modal :poll="$poll" :loop="$loop" />
                 @endforeach
             </tbody>
