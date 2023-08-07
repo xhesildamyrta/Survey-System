@@ -5,17 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Response extends Model
+class Question extends Model
 {
     use HasFactory;
-
     protected $fillable = [
-        'ip_address',
-        'computer_id',
+        'title',
         'poll_id',
-        'vote',
     ];
+    public function answers(){
+        return $this->hasMany(Answer::class);
+    }
+
     public function poll(){
         return $this->belongsTo(Poll::class);
     }
 }
+

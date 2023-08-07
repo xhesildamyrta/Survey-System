@@ -12,16 +12,20 @@
     <form action="{{ route('submit-poll') }}" method="POST">
         @csrf
         @php
-            $key = (int) key($poll) + 1;
+            $key = 0;
         @endphp
         <div class="grid grid-cols-1">
+            @foreach($poll->questions as $question)
+            @php ++$key; @endphp
             <x-core.poll
                 :key="$key"
-                :question="$poll"
-                :options="$poll->answers"
-                :name="'question'">
+                :question="$question"
+                :options="$question->answers"
+                :name="'question'.$question->id">
             </x-core.poll>
+            @endforeach
         </div>
+        <input type="hidden" name="poll_id" value="{{$poll->id}}"/>
         <div class="flex justify-center gap-x-10 my-2 md:my-10">
             <x-core.button class="w-full">SUBMIT</x-core.button>
             <x-core.button primary as="a" href="{{ route('poll-results', $poll->id) }}">LIVE RESULTS

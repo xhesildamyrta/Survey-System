@@ -1,13 +1,15 @@
 <div class="flex flex-col gap-y-1">
-    @foreach ($results as $key => $answer)
-        <div class="font-bold">{{ $loop->index + 1 . ') ' . $answer[0]['title'] }}</div>
-        @php $percent = App\Http\Controllers\PollController::convertToPercent(count($answer),$totalVotes); @endphp
-        <x-core.progress-bar
-            :title="$answer[0]['answer']"
-            :percent="$percent"
-            :answer_votes="count($answer) ?? 0"
+    @foreach ($results as $key => $result)
+        <div class="font-bold">{{ $loop->index + 1 . ') ' . $result['question_title'] }}</div>
+        @foreach ($result['answers'] as $answer)
+<x-core.progress-bar
+            :title="$answer['answer_title']"
+            :percent="$answer['percentage']"
+            :answer_votes="$answer['votes']"
             :total="$totalVotes">
         </x-core.progress-bar>
+        @endforeach
+
     @endforeach
 </div>
 <div class="flex justify-center gap-x-10 my-2 md:my-10">
