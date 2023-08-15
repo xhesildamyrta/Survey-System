@@ -11,9 +11,16 @@ class Answer extends Model
 
     protected $fillable = [
         'title',
+        'points',
+        'question_id',
       ];
 
     public function question(){
         return $this->belongsTo(Question::class);
+    }
+
+    public function responses()
+    {
+        return $this->hasMany(Response::class);
     }
 }

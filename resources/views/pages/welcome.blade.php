@@ -9,8 +9,8 @@
             <strong> {{ session()->get('error') }}</strong>
         </x-core.session-info>
     @endif
-    @if (!$questions->isEmpty())
-            <x-poll-form :questions="$questions" />
+    @if (!$poll->isEmpty())
+        <x-poll.chose-poll-form :polls="$poll" />
         </div>
     @endif
 </x-layouts.app>

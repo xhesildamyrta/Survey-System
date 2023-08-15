@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Question;
+use App\Models\Poll;
 use App\Models\Answer;
 use App\Models\Response;
 use GuzzleHttp\Client;
@@ -14,11 +14,16 @@ class PollController extends Controller
 {
     public function index()
     {
-        $questions = Question::all();
-        //count options selected foreach question;
-        $votes = $this->showResults();
+        $poll = Poll::all();
+        $votes = null;
 
-        return view('welcome', compact('questions', 'votes'));
+        return view('pages.welcome', compact('poll', 'votes'));
+    }
+
+    public function show($id)
+    {
+        $poll = Poll::find($id);
+        return view('pages.single-poll', ['poll' => $poll]);
     }
 
     public function submitPoll(Request $request)
@@ -26,68 +31,56 @@ class PollController extends Controller
         $ip = $this->getIPAddress();
         $userAgent = $request->header('User-Agent');
 
-        if ($request->hasCookie('voted')) {
-            return redirect()
-                ->back()
-                ->with('error', 'You have already voted!');
-        }
-
         $existingVote = Response::where('ip_address', $ip)
             ->where('computer_id', $userAgent)
             ->first();
+        $poll = Poll::find($request['poll_id']);
 
-        $questionsKeys = Question::all()
-            ->keys()
-            ->toArray();
+        $rules = [];
 
-        $validatedData = $request->validate(
-            $this->getValidationRules($questionsKeys),
-            [
-                'required' => 'Please select an answer for question.',
-            ]
-        );
+        foreach ($poll->questions as $question) {
+            $rules['question' . $question->id] = 'required';
+        }
 
-        if (!$existingVote) {
-            $questions = Question::all();
-            foreach ($questions as $key => $question) {
-                $selectedOption = $request->input('question' . $key);
-                $answer = Answer::find($selectedOption);
+        $validated = $request->validate($rules);
 
-                $responses[] = [
-                    'question_id' => $question->id,
-                    'selected_option' => $selectedOption,
-                    'answer' => $answer ? $answer->title : null,
-                ];
+        if ($validated) {
+            $jsonData = [];
+            foreach ($validated as $key => $value) {
+                if ($key !== 'poll_id') {
+                    $questionId = substr($key, strlen('question'));
+                    $jsonData['question' . $questionId] = [
+                        'question_id' => $questionId,
+                        'question_title' => $poll->questions->find($questionId)['title'],
+                        'answer_id' => $value,
+                        'answer_title' => $poll->questions->find($questionId)->answers->find($value)['title'],
+                    ];
+                }
             }
-
-            $response = new Response();
-            $response->ip_address = $ip;
-            $response->computer_id = $userAgent;
-            $response->selected_option = json_encode($responses);
-            $response->save();
-
-            Cookie::queue('voted', true, 60);
-
-            return redirect()
-                ->back()
-                ->with('success', 'Answer submitted successfully!')
-                ->cookie('voted', true, 10080);
-        } else {
-            return redirect()
-                ->back()
-                ->with('error','You(or someone on Your Wi-Fi network) have already participated on this poll!');
-        }
-    }
-    private function getValidationRules(array $questionKeys): array
-    {
-        $validationRules = [];
-
-        foreach ($questionKeys as $key) {
-            $validationRules['question' . $key] = 'required';
+            $jsonVote = json_encode($jsonData);
         }
 
-        return $validationRules;
+        // if ($request->hasCookie('voted') || $existingVote) {
+        //     return redirect()
+        //         ->back()
+        //         ->with('error', 'You have already voted!');
+        // }
+
+
+        $response = new Response();
+        $response->ip_address = $ip;
+        $response->computer_id = $userAgent;
+        $response->poll_id = $request['poll_id'];
+        $response->vote = $jsonVote;
+        $response->save();
+
+
+        return redirect()
+            ->back()
+            ->with('success', 'Answer submitted successfully!')->cookie('voted', true, 10080);
     }
+
+
 
     public function getIPAddress()
     {
@@ -103,56 +96,54 @@ class PollController extends Controller
         }
     }
 
-    public function showResults()
+    public function showResults($id)
     {
-        $questions = Question::all();
-        $votes = Response::all();
-        $votesPerQuestion = [];
+        $poll = Poll::findOrFail($id);
+        $votes = Response::where('poll_id', $id)->get();
+        $totalVotes = count($votes);
 
+        $votesPerAnswer = [];
+        $totalVotesPerQuestion = [];
+
+        $results = [];
+
+        foreach ($poll->questions as $question) {
+            $votesPerAnswer[$question->id] = [];
+            $totalVotesPerQuestion[$question->id] = 0;
+            foreach ($question->answers as $answer) {
+                $votesPerAnswer[$question->id][$answer->id] = 0;
+            }
+        }
         foreach ($votes as $vote) {
-            $answers = json_decode($vote['selected_option'], true);
-
-            foreach ($answers as $answer) {
-                $questionId = $answer['question_id'];
-                $selectedOption = $answer['selected_option'];
-
-                if (!isset($votesPerQuestion[$questionId][$selectedOption])) {
-                    $votesPerQuestion[$questionId][$selectedOption] = 0;
+            $voteData = json_decode($vote->vote, true);
+            foreach ($voteData as $questionId => $answerData) {
+                if (str_starts_with($questionId, 'question')) {
+                    $questionId = substr($questionId, strlen('question'));
+                    $answerId = $answerData['answer_id'];
+                    $votesPerAnswer[$questionId][$answerId]++;
+                    $totalVotesPerQuestion[$questionId]++;
                 }
-
-                $votesPerQuestion[$questionId][$selectedOption]++;
             }
         }
-
-        $votesPercentage = [];
-        $totalVotes = 0;
-
-        foreach ($votesPerQuestion as $questionId => $options) {
-            $totalVotes = array_sum($options);
-            $votesPercentage[$questionId] = [];
-
-            foreach ($options as $option => $count) {
-                $percentage = ($count / $totalVotes) * 100;
-                $votesPercentage[$questionId][$option] = number_format(
-                    $percentage,
-                    2
-                );
+        foreach ($poll->questions as $question) {
+            $results['question' . $question->id] = [
+                'question_id' => $question->id,
+                'question_title' => $question->title,
+                'answers' => [],
+            ];
+            foreach ($question->answers as $answer) {
+                $votes = $votesPerAnswer[$question->id][$answer->id];
+                $totalVotes = $totalVotesPerQuestion[$question->id];
+                $percentage = ($totalVotes > 0) ? ($votes / $totalVotes) * 100 : 0;
+                $results['question' . $question->id]['answers'][] = [
+                    'answer_id' => $answer->id,
+                    'answer_title' => $answer->title,
+                    'votes' => $votes,
+                    'percentage' => number_format($percentage, 2),
+                ];
             }
         }
-
-        $optionVotes = $votesPercentage ?? 0;
-        $latest_vote = $this->calculateDateTimeDifference();
-        return view(
-            'poll-results',
-            compact(
-                'latest_vote',
-                'questions',
-                'votes',
-                'optionVotes',
-                'votesPerQuestion',
-                'totalVotes'
-            )
-        );
+        return view('pages.single-poll-results', ['results' => $results, 'totalVotes' => $totalVotes]);
     }
 
     public function calculateDateTimeDifference()
